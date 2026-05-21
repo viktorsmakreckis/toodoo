@@ -16,9 +16,7 @@
 
 	let { data, children } = $props();
 
-	const displayName = $derived(
-		data.user.displayUsername ?? data.user.username ?? data.user.email
-	);
+	const displayName = $derived(data.user.displayUsername ?? data.user.username ?? data.user.email);
 
 	const initials = $derived(
 		data.user.name
@@ -46,7 +44,9 @@
 					<DropdownMenu.Trigger>
 						{#snippet child({ props })}
 							<Button {...props} variant="ghost" size="icon" aria-label="Toggle theme">
-								<SunIcon class="size-4 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+								<SunIcon
+									class="size-4 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90"
+								/>
 								<MoonIcon
 									class="absolute size-4 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0"
 								/>
@@ -98,7 +98,10 @@
 								</Avatar.Root>
 								<div class="flex min-w-0 flex-col">
 									<span class="truncate text-sm font-medium">{data.user.name}</span>
-									<span class="truncate text-xs font-normal text-muted-foreground" title={data.user.email}>
+									<span
+										class="truncate text-xs font-normal text-muted-foreground"
+										title={data.user.email}
+									>
 										{data.user.email}
 									</span>
 									{#if data.user.username}
