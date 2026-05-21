@@ -4,13 +4,15 @@ import { sveltekitCookies } from 'better-auth/svelte-kit';
 import { env } from '$env/dynamic/private';
 import { getRequestEvent } from '$app/server';
 import { db } from '$lib/server/db';
+import { username } from 'better-auth/plugins';
 
 export const auth = betterAuth({
 	baseURL: env.ORIGIN,
 	secret: env.BETTER_AUTH_SECRET,
 	database: drizzleAdapter(db, { provider: 'pg' }),
-	emailAndPassword: { enabled: true },
+	emailAndPassword: { enabled: true, requireEmailVerification: false, autoSignIn: true },
 	plugins: [
+		username(),
 		sveltekitCookies(getRequestEvent) // make sure this is the last plugin in the array
 	]
 });
