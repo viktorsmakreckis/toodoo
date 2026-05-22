@@ -7,6 +7,7 @@ github_repo = "your-github-username/toodoo"
 # db_tier             = "db-f1-micro"
 # deletion_protection = true
 # email_from          = "Toodoo <onboarding@resend.dev>"
+# origin_override     = "https://toodoo-…-ew.a.run.app"
 
 # Leave blank and add the secret value manually with:
 #   echo -n "re_..." | gcloud secrets versions add toodoo-resend-api-key --data-file=-
