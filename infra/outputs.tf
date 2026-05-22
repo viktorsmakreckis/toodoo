@@ -1,10 +1,10 @@
 output "cloud_run_url" {
-  description = "Public URL of the Cloud Run service."
+  description = "Actual URL Cloud Run assigned to the service. Set this as origin_override in terraform.tfvars if it differs from configured_origin."
   value       = google_cloud_run_v2_service.app.uri
 }
 
-output "predicted_cloud_run_url" {
-  description = "URL passed to the app as ORIGIN. Must equal cloud_run_url after the first deploy."
+output "configured_origin" {
+  description = "Value currently wired into the app as ORIGIN. Must match cloud_run_url for sign-in/sign-up to work."
   value       = local.cloud_run_url
 }
 

@@ -78,6 +78,12 @@ variable "email_from" {
   default     = "Toodoo <onboarding@resend.dev>"
 }
 
+variable "origin_override" {
+  description = "Override for the ORIGIN env var (better-auth baseURL + SvelteKit CSRF). Leave blank to use the predicted *.run.app URL; set this after the first apply if Cloud Run returns a different URL (e.g. the legacy hash-based format)."
+  type        = string
+  default     = ""
+}
+
 variable "resend_api_key" {
   description = "Optional. If non-empty, populates the Resend API key secret. Leave blank and add a version manually via gcloud to avoid committing the value."
   type        = string

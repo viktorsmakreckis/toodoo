@@ -72,6 +72,31 @@ echo -n "re_your_resend_key" | \
 Cloud Run picks up the new version on the next revision deploy (or run
 `gcloud run services update toodoo --region=us-central1` to roll one now).
 
+## Reconcile ORIGIN with the real Cloud Run URL
+
+`ORIGIN` is passed to better-auth as `baseURL` and to SvelteKit as its CSRF
+trusted origin. On first apply, Terraform sets it to the predicted modern
+URL (`https://<service>-<project-number>.<region>.run.app`). If your project
+falls back to the legacy hash-based URL (`https://<service>-<hash>-<region-code>.a.run.app`),
+sign-up will fail with `Invalid origin`.
+
+After the first apply, compare the two outputs:
+
+```bash
+terraform output cloud_run_url        # what Cloud Run actually serves
+terraform output configured_origin    # what the app is told it is
+```
+
+If they differ, paste the real URL into `terraform.tfvars` and re-apply:
+
+```hcl
+origin_override = "https://toodoo-abc123-ew.a.run.app"
+```
+
+```bash
+terraform apply
+```
+
 ## Run database migrations
 
 The first time, and after schema changes:
