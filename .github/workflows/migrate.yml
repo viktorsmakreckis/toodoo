@@ -61,5 +61,5 @@ jobs:
 
       - name: Run drizzle migrations
         env:
-          DATABASE_URL: "postgres://${{ env.DB_USER }}:${{ env.DB_PASSWORD }}@127.0.0.1:5432/${{ env.DB_NAME }}"
+          DATABASE_URL: 'postgres://${{ env.DB_USER }}:${{ env.DB_PASSWORD }}@127.0.0.1:5432/${{ env.DB_NAME }}'
         run: pnpm db:migrate

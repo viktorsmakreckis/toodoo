@@ -50,10 +50,10 @@ In your GitHub repo settings:
 
 **Secrets** (Settings → Secrets and variables → Actions → Secrets):
 
-| Name                  | Value                                                    |
-| --------------------- | -------------------------------------------------------- |
-| `WIF_PROVIDER`        | `workload_identity_provider` output                      |
-| `WIF_SERVICE_ACCOUNT` | `deployer_service_account_email` output                  |
+| Name                  | Value                                   |
+| --------------------- | --------------------------------------- |
+| `WIF_PROVIDER`        | `workload_identity_provider` output     |
+| `WIF_SERVICE_ACCOUNT` | `deployer_service_account_email` output |
 
 **Variables** (Settings → Secrets and variables → Actions → Variables):
 
@@ -77,7 +77,7 @@ Cloud Run picks up the new version on the next revision deploy (or run
 The first time, and after schema changes:
 
 **Option A — GitHub Actions** (recommended once everything is wired up): go to
-the `Run DB Migrations` workflow in the Actions tab and click *Run workflow*.
+the `Run DB Migrations` workflow in the Actions tab and click _Run workflow_.
 
 **Option B — Locally** via Cloud SQL Auth Proxy:
 
