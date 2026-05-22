@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { resetMode, setMode, userPrefersMode } from 'mode-watcher';
@@ -7,12 +8,17 @@
 	import MonitorIcon from '@lucide/svelte/icons/monitor';
 	import LogOutIcon from '@lucide/svelte/icons/log-out';
 	import CheckIcon from '@lucide/svelte/icons/check';
-	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
+	import ChevronUpIcon from '@lucide/svelte/icons/chevron-up';
+	import PlusIcon from '@lucide/svelte/icons/plus';
+	import LayoutGridIcon from '@lucide/svelte/icons/layout-grid';
 	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Avatar from '$lib/components/ui/avatar';
+	import * as Sidebar from '$lib/components/ui/sidebar';
 	import { Toaster } from '$lib/components/ui/sonner';
 	import { signOut } from '$lib/auth-client';
+	import CreateBoardDialog from '$lib/components/todo/create-board-dialog.svelte';
+	import BoardIcon from '$lib/components/todo/board-icon.svelte';
 
 	let { data, children } = $props();
 
@@ -27,6 +33,10 @@
 			.join('') || data.user.email[0]?.toUpperCase()
 	);
 
+	const activeBoardId = $derived(page.params.boardId);
+
+	let createBoardOpen = $state(false);
+
 	async function handleSignOut() {
 		await signOut();
 		await invalidateAll();
@@ -34,98 +44,134 @@
 	}
 </script>
 
-<div class="flex min-h-svh flex-col bg-background">
-	<header class="border-b">
-		<div class="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-6 py-4">
-			<a href={resolve('/')} class="text-lg font-semibold">Toodoo</a>
-
-			<div class="flex items-center gap-2">
-				<DropdownMenu.Root>
-					<DropdownMenu.Trigger>
-						{#snippet child({ props })}
-							<Button {...props} variant="ghost" size="icon" aria-label="Toggle theme">
-								<SunIcon
-									class="size-4 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90"
-								/>
-								<MoonIcon
-									class="absolute size-4 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0"
-								/>
-							</Button>
-						{/snippet}
-					</DropdownMenu.Trigger>
-					<DropdownMenu.Content align="end">
-						<DropdownMenu.Item onclick={() => setMode('light')}>
-							<SunIcon />
-							<span>Light</span>
-							{#if userPrefersMode.current === 'light'}
-								<CheckIcon class="ml-auto" />
-							{/if}
-						</DropdownMenu.Item>
-						<DropdownMenu.Item onclick={() => setMode('dark')}>
-							<MoonIcon />
-							<span>Dark</span>
-							{#if userPrefersMode.current === 'dark'}
-								<CheckIcon class="ml-auto" />
-							{/if}
-						</DropdownMenu.Item>
-						<DropdownMenu.Item onclick={() => resetMode()}>
-							<MonitorIcon />
-							<span>System</span>
-							{#if userPrefersMode.current === 'system'}
-								<CheckIcon class="ml-auto" />
-							{/if}
-						</DropdownMenu.Item>
-					</DropdownMenu.Content>
-				</DropdownMenu.Root>
-
-				<DropdownMenu.Root>
-					<DropdownMenu.Trigger>
-						{#snippet child({ props })}
-							<Button {...props} variant="ghost" class="gap-2">
-								<Avatar.Root size="sm">
-									<Avatar.Fallback>{initials}</Avatar.Fallback>
-								</Avatar.Root>
-								<span class="hidden sm:inline">{displayName}</span>
-								<ChevronDownIcon class="size-3.5 opacity-60" />
-							</Button>
-						{/snippet}
-					</DropdownMenu.Trigger>
-					<DropdownMenu.Content align="end" class="min-w-64">
-						<DropdownMenu.Label class="p-0">
-							<div class="flex items-center gap-3 px-2 py-1.5">
-								<Avatar.Root>
-									<Avatar.Fallback>{initials}</Avatar.Fallback>
-								</Avatar.Root>
-								<div class="flex min-w-0 flex-col">
-									<span class="truncate text-sm font-medium">{data.user.name}</span>
-									<span
-										class="truncate text-xs font-normal text-muted-foreground"
-										title={data.user.email}
-									>
-										{data.user.email}
-									</span>
-									{#if data.user.username}
-										<span class="truncate text-xs font-normal text-muted-foreground">
-											@{data.user.displayUsername ?? data.user.username}
-										</span>
-									{/if}
-								</div>
-							</div>
-						</DropdownMenu.Label>
-						<DropdownMenu.Separator />
-						<DropdownMenu.Item variant="destructive" onclick={handleSignOut}>
-							<LogOutIcon />
-							Sign out
-						</DropdownMenu.Item>
-					</DropdownMenu.Content>
-				</DropdownMenu.Root>
+<Sidebar.Provider>
+	<Sidebar.Root collapsible="icon">
+		<Sidebar.Header>
+			<div
+				class="flex items-center justify-between gap-2 px-2 py-1.5 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+			>
+				<a
+					href={resolve('/')}
+					class="flex items-center gap-2 font-semibold tracking-tight group-data-[collapsible=icon]:hidden"
+				>
+					<LayoutGridIcon class="size-5" />
+					<span>Toodoo</span>
+				</a>
+				<Button
+					variant="ghost"
+					size="icon"
+					class="size-7"
+					aria-label="New board"
+					onclick={() => (createBoardOpen = true)}
+				>
+					<PlusIcon class="size-4" />
+				</Button>
 			</div>
-		</div>
-	</header>
+		</Sidebar.Header>
 
-	<main class="mx-auto w-full max-w-5xl flex-1 px-6 py-8">
-		{@render children()}
-	</main>
-</div>
+		<Sidebar.Content>
+			<Sidebar.Group>
+				<Sidebar.GroupLabel>Boards</Sidebar.GroupLabel>
+				<Sidebar.GroupContent>
+					<Sidebar.Menu>
+						{#each data.boards as b (b.id)}
+							<Sidebar.MenuItem>
+								<Sidebar.MenuButton isActive={activeBoardId === b.id} tooltipContent={b.name}>
+									{#snippet child({ props })}
+										<a href={resolve(`/b/${b.id}`)} {...props}>
+											<BoardIcon name={b.icon} class="size-4 shrink-0" />
+											<span>{b.name}</span>
+										</a>
+									{/snippet}
+								</Sidebar.MenuButton>
+							</Sidebar.MenuItem>
+						{/each}
+						{#if data.boards.length === 0}
+							<Sidebar.MenuItem>
+								<Sidebar.MenuButton
+									onclick={() => (createBoardOpen = true)}
+									tooltipContent="New board"
+								>
+									<PlusIcon class="size-4" />
+									<span class="text-muted-foreground">Create your first board</span>
+								</Sidebar.MenuButton>
+							</Sidebar.MenuItem>
+						{/if}
+					</Sidebar.Menu>
+				</Sidebar.GroupContent>
+			</Sidebar.Group>
+		</Sidebar.Content>
+
+		<Sidebar.Footer>
+			<Sidebar.Menu>
+				<Sidebar.MenuItem>
+					<DropdownMenu.Root>
+						<DropdownMenu.Trigger>
+							{#snippet child({ props })}
+								<Sidebar.MenuButton {...props} size="lg" tooltipContent={displayName}>
+									<Avatar.Root>
+										<Avatar.Fallback>{initials}</Avatar.Fallback>
+									</Avatar.Root>
+									<div class="flex min-w-0 flex-col text-left">
+										<span class="truncate text-sm font-medium">{displayName}</span>
+										<span class="truncate text-xs text-muted-foreground">{data.user.email}</span>
+									</div>
+									<ChevronUpIcon class="ml-auto size-4 opacity-60" />
+								</Sidebar.MenuButton>
+							{/snippet}
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content side="top" align="start" class="min-w-56">
+							<DropdownMenu.Group>
+								<DropdownMenu.Label class="text-xs text-muted-foreground">Theme</DropdownMenu.Label>
+								<DropdownMenu.Item onclick={() => setMode('light')}>
+									<SunIcon />
+									<span>Light</span>
+									{#if userPrefersMode.current === 'light'}
+										<CheckIcon class="ml-auto" />
+									{/if}
+								</DropdownMenu.Item>
+								<DropdownMenu.Item onclick={() => setMode('dark')}>
+									<MoonIcon />
+									<span>Dark</span>
+									{#if userPrefersMode.current === 'dark'}
+										<CheckIcon class="ml-auto" />
+									{/if}
+								</DropdownMenu.Item>
+								<DropdownMenu.Item onclick={() => resetMode()}>
+									<MonitorIcon />
+									<span>System</span>
+									{#if userPrefersMode.current === 'system'}
+										<CheckIcon class="ml-auto" />
+									{/if}
+								</DropdownMenu.Item>
+							</DropdownMenu.Group>
+							<DropdownMenu.Separator />
+							<DropdownMenu.Group>
+								<DropdownMenu.Item variant="destructive" onclick={handleSignOut}>
+									<LogOutIcon />
+									Sign out
+								</DropdownMenu.Item>
+							</DropdownMenu.Group>
+						</DropdownMenu.Content>
+					</DropdownMenu.Root>
+				</Sidebar.MenuItem>
+			</Sidebar.Menu>
+		</Sidebar.Footer>
+		<Sidebar.Rail />
+	</Sidebar.Root>
+
+	<Sidebar.Inset class="overflow-hidden">
+		<header
+			class="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur"
+		>
+			<Sidebar.Trigger />
+		</header>
+		<main class="flex-1 overflow-auto">
+			{@render children()}
+		</main>
+	</Sidebar.Inset>
+</Sidebar.Provider>
+
+<CreateBoardDialog bind:open={createBoardOpen} />
 
 <Toaster richColors closeButton position="top-center" />

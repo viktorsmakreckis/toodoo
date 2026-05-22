@@ -61,5 +61,8 @@
 		"vaul-svelte": "1.0.0-next.7",
 		"vite": "^8.0.7",
 		"zod": "^4.4.3"
+	},
+	"dependencies": {
+		"@dnd-kit/svelte": "^0.4.0"
 	}
 }
