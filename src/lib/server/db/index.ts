@@ -1,9 +1,7 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
+import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema';
 import { env } from '$env/dynamic/private';
-
-if (!env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
 
 /**
  * postgres-js can't parse a URL whose host is a Unix socket path
@@ -25,6 +23,22 @@ function createClient(url: string) {
 	return postgres(url);
 }
 
-const client = createClient(env.DATABASE_URL);
+// Lazy singleton: importing this module shouldn't read env, so the bundle
+// can be evaluated at build time (e.g. SvelteKit's postbuild analyse step)
+// without a DATABASE_URL configured.
+let cached: PostgresJsDatabase<typeof schema> | null = null;
 
-export const db = drizzle(client, { schema });
+function getDb(): PostgresJsDatabase<typeof schema> {
+	if (cached) return cached;
+	if (!env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
+	cached = drizzle(createClient(env.DATABASE_URL), { schema });
+	return cached;
+}
+
+export const db = new Proxy({} as PostgresJsDatabase<typeof schema>, {
+	get(_target, prop, receiver) {
+		const real = getDb();
+		const value = Reflect.get(real, prop, receiver);
+		return typeof value === 'function' ? value.bind(real) : value;
+	}
+});
