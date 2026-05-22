@@ -1,0 +1,17 @@
+node_modules
+.svelte-kit
+build
+.git
+.github
+infra
+.idea
+.vscode
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+README.md
+CLAUDE.md
+compose.yaml
+drizzle
