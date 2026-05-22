@@ -1,0 +1,13 @@
+project_id  = "your-gcp-project-id"
+region      = "us-central1"
+app_name    = "toodoo"
+github_repo = "your-github-username/toodoo"
+
+# Optional overrides — defaults are in variables.tf.
+# db_tier             = "db-f1-micro"
+# deletion_protection = true
+# email_from          = "Toodoo <onboarding@resend.dev>"
+
+# Leave blank and add the secret value manually with:
+#   echo -n "re_..." | gcloud secrets versions add toodoo-resend-api-key --data-file=-
+# resend_api_key = ""
