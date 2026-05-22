@@ -40,5 +40,13 @@ export default defineConfig(
 		// Override or add rule settings here, such as:
 		// 'svelte/button-has-type': 'error'
 		rules: {}
+	},
+	{
+		// shadcn-svelte generated components: don't enforce SvelteKit-specific rules
+		// because these components accept arbitrary external URLs.
+		files: ['src/lib/components/ui/**/*.svelte'],
+		rules: {
+			'svelte/no-navigation-without-resolve': 'off'
+		}
 	}
 );
