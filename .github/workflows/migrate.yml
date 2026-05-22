@@ -1,0 +1,65 @@
+name: Run DB Migrations
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    environment: production
+
+    env:
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      GCP_REGION: ${{ vars.GCP_REGION }}
+      SQL_INSTANCE: ${{ vars.SQL_INSTANCE }}
+      DB_SECRET: ${{ vars.DB_SECRET }}
+      DB_USER: ${{ vars.DB_USER }}
+      DB_NAME: ${{ vars.DB_NAME }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Fetch DB password
+        run: |
+          PW=$(gcloud secrets versions access latest --secret="$DB_SECRET" --project "$GCP_PROJECT_ID")
+          echo "::add-mask::$PW"
+          echo "DB_PASSWORD=$PW" >> "$GITHUB_ENV"
+
+      - name: Start Cloud SQL Auth Proxy
+        run: |
+          curl -fsSL -o cloud-sql-proxy \
+            "https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.13.0/cloud-sql-proxy.linux.amd64"
+          chmod +x cloud-sql-proxy
+          ./cloud-sql-proxy --port 5432 "$SQL_INSTANCE" &
+          for i in {1..30}; do
+            (echo > /dev/tcp/127.0.0.1/5432) >/dev/null 2>&1 && break
+            sleep 1
+          done
+
+      - name: Run drizzle migrations
+        env:
+          DATABASE_URL: "postgres://${{ env.DB_USER }}:${{ env.DB_PASSWORD }}@127.0.0.1:5432/${{ env.DB_NAME }}"
+        run: pnpm db:migrate
